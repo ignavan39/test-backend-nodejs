@@ -1,0 +1,35 @@
+{
+  "name": "test-backend-nodejs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:ignavan39/test-backend-nodejs.git",
+  "license": "MIT",
+	  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "start:dev": "npm run build && npm start",
+    "typeorm": "ts-node ./node_modules/typeorm/cli",
+    "typeorm:migrate": "npm run typeorm migration:run",
+    "typeorm:generate": "npm run typeorm -- migration:generate -n",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.7.2",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "express": "^5.1.0",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.27"
+  }
+}
