@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import express from 'express';
 import { Container } from './container';
 import { errorHandler } from './middleware/error-handler';
+import { AppDataSource } from './data-source';
 
 class App {
   public app: express.Application;
@@ -9,9 +10,9 @@ class App {
 
   constructor() {
     this.app = express();
-    this.container = Container.getInstance();
-    
+
     this.initializeDatabase();
+    this.container = Container.getInstance();
     this.initializeMiddlewares();
     this.initializeRoutes();
     this.initializeErrorHandling();
@@ -19,8 +20,7 @@ class App {
 
   private async initializeDatabase(): Promise<void> {
     try {
-      const dataSource = this.container.getDataSource();
-      await dataSource.initialize();
+      await AppDataSource.initialize();
       console.log('Database connection established');
     } catch (error) {
       console.error('Database connection failed:', error);

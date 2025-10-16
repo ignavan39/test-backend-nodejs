@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Booking } from './booking';
 
-@Entity()
+@Entity({name: 'event'})
 export class Event {
   @PrimaryGeneratedColumn()
   id!: number;

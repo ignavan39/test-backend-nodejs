@@ -6,12 +6,21 @@ import {
 
 export class BookingController {
 
-
 	constructor(private bookingService: BookingService) { }
 
 	reserve = async (req: Request, res: Response): Promise<void> => {
 		try {
-			const { event_id, user_id } = req.body;
+			if (!req.body || !req.body.event_id || !req.body.user_id) {
+				res.status(400).json({
+					success: false,
+					error: 'event_id and user_id are required'
+				});
+				return;
+			}
+
+
+			const event_id = req.body.event_id;
+			const user_id = req.body.user_id
 
 			if (event_id === undefined || user_id === undefined) {
 				res.status(400).json({
@@ -40,7 +49,14 @@ export class BookingController {
 
 	getAvailableSeats = async (req: Request, res: Response): Promise<void> => {
 		try {
-			const { event_id } = req.params;
+			if (!req.params) {
+				res.status(400).json({
+					success: false,
+					error: 'event_id is required'
+				});
+				return;
+			}
+			const event_id = req.params.event_id;
 
 			if (!event_id) {
 				res.status(400).json({
@@ -67,7 +83,14 @@ export class BookingController {
 
 	getUserBookings = async (req: Request, res: Response): Promise<void> => {
 		try {
-			const { user_id } = req.params;
+			if (!req.params) {
+				res.status(400).json({
+					success: false,
+					error: 'user_id is required'
+				});
+				return;
+			}
+			const user_id = req.params.user_id;
 
 			if (!user_id) {
 				res.status(400).json({

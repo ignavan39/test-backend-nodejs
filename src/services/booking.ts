@@ -1,68 +1,104 @@
-
+import { DataSource } from 'typeorm';
 import { Booking } from '../entities/booking';
-import {
-	EventNotFoundError,
-	DuplicateBookingError,
-	NoAvailableSeatsError,
-	InvalidInputError
+import { Event } from '../entities/event';
+import { 
+  EventNotFoundError, 
+  DuplicateBookingError, 
+  NoAvailableSeatsError,
+  InvalidInputError 
 } from '../errors/errors';
-import { BookingRepository } from '../repositories/booking';
-import { EventRepository } from '../repositories/events';
 
 export class BookingService {
+  constructor(private dataSource: DataSource) {}
 
+  async reserveSeat(eventId: number, userId: string): Promise<Booking> {
+    this.validateInput(eventId, userId);
 
-	constructor(private bookingRepository: BookingRepository, private eventRepository: EventRepository,) {
-	}
+    const eventRepository = this.dataSource.getRepository(Event);
+    const bookingRepository = this.dataSource.getRepository(Booking);
 
-	async reserveSeat(eventId: number, userId: string): Promise<Booking> {
-		if (!eventId || eventId <= 0) {
-			throw new InvalidInputError('event_id', 'positive number');
-		}
+    const event = await eventRepository.findOne({ where: { id: eventId } });
+    if (!event) {
+      throw new EventNotFoundError(eventId);
+    }
 
-		if (!userId || typeof userId !== 'string') {
-			throw new InvalidInputError('user_id', 'non-empty string');
-		}
+    const existingBooking = await bookingRepository.findOne({
+      where: { event_id: eventId, user_id: userId }
+    });
+    if (existingBooking) {
+      throw new DuplicateBookingError(eventId, userId);
+    }
 
-		const eventExists = await this.eventRepository.isEventExists(eventId);
-		if (!eventExists) {
-			throw new EventNotFoundError(eventId);
-		}
+    const bookedCount = await bookingRepository.count({
+      where: { event_id: eventId }
+    });
+    
+    if (bookedCount >= event.total_seats) {
+      throw new NoAvailableSeatsError(eventId);
+    }
 
-		const existingBooking = await this.bookingRepository.checkExistingBooking(eventId, userId);
-		if (existingBooking) {
-			throw new DuplicateBookingError(eventId, userId);
-		}
+    const booking = bookingRepository.create({
+      event_id: eventId,
+      user_id: userId
+    });
+    
+    return await bookingRepository.save(booking);
+  }
 
-		const availableSeats = await this.eventRepository.getAvailableSeats(eventId);
-		if (availableSeats <= 0) {
-			throw new NoAvailableSeatsError(eventId);
-		}
+  async getAvailableSeats(eventId: number): Promise<number> {
+    this.validateEventId(eventId);
 
-		return await this.bookingRepository.createBooking(eventId, userId);
-	}
+    const eventRepository = this.dataSource.getRepository(Event);
+    const bookingRepository = this.dataSource.getRepository(Booking);
 
-	async getAvailableSeats(eventId: number): Promise<number> {
-		if (!eventId || eventId <= 0) {
-			throw new InvalidInputError('event_id', 'positive number');
-		}
+    const event = await eventRepository.findOne({ where: { id: eventId } });
+    if (!event) {
+      throw new EventNotFoundError(eventId);
+    }
 
-		return await this.eventRepository.getAvailableSeats(eventId);
-	}
+    const bookedCount = await bookingRepository.count({
+      where: { event_id: eventId }
+    });
 
-	async getUserBookings(userId: string): Promise<Booking[]> {
-		if (!userId || typeof userId !== 'string') {
-			throw new InvalidInputError('user_id', 'non-empty string');
-		}
+    return event.total_seats - bookedCount;
+  }
 
-		return await this.bookingRepository.getUserBookings(userId);
-	}
+  async getUserBookings(userId: string): Promise<Booking[]> {
+    this.validateUserId(userId);
 
-	async getEventBookings(eventId: number): Promise<Booking[]> {
-		if (!eventId || eventId <= 0) {
-			throw new InvalidInputError('event_id', 'positive number');
-		}
+    const bookingRepository = this.dataSource.getRepository(Booking);
+    
+    return await bookingRepository.find({
+      where: { user_id: userId },
+      relations: ['event']
+    });
+  }
 
-		return await this.bookingRepository.getEventBookings(eventId);
-	}
+  async getEventBookings(eventId: number): Promise<Booking[]> {
+    this.validateEventId(eventId);
+
+    const bookingRepository = this.dataSource.getRepository(Booking);
+    
+    return await bookingRepository.find({
+      where: { event_id: eventId },
+      relations: ['event']
+    });
+  }
+
+  private validateInput(eventId: number, userId: string): void {
+    this.validateEventId(eventId);
+    this.validateUserId(userId);
+  }
+
+  private validateEventId(eventId: number): void {
+    if (!eventId || eventId <= 0) {
+      throw new InvalidInputError('event_id', 'positive number');
+    }
+  }
+
+  private validateUserId(userId: string): void {
+    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
+      throw new InvalidInputError('user_id', 'non-empty string');
+    }
+  }
 }

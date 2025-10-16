@@ -1,9 +1,10 @@
 import { DataSource } from 'typeorm';
-import { Event } from './entities/event';
-import { Booking } from './entities/booking';
 import * as dotenv from 'dotenv';
+import * as path from 'path';
 
 dotenv.config();
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -12,12 +13,24 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'booking_db',
-  entities: [Event, Booking],
-  synchronize: process.env.NODE_ENV === 'development',
-  logging: process.env.NODE_ENV === 'development',
-  migrations: ['src/migrations/*.ts'],
+  
+  entities: [
+    path.join(__dirname, 'entities/*.js'),
+    path.join(__dirname, 'entities/*.ts')
+  ],
+  
+  ...(isProduction && {
+    entities: [path.join(__dirname, 'entities/*.js')]
+  }),
+  
+  synchronize: false,
+  logging: process.env.NODE_ENV !== 'production',
+  
+  migrations: [path.join(__dirname, 'migrations/*.js')],
   subscribers: [],
+  
   extra: {
-    connectionLimit: 10
-  }
+    max: 20,
+    connectionTimeoutMillis: 10000,
+  },
 });

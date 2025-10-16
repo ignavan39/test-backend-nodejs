@@ -1,8 +1,8 @@
 
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Index, JoinColumn } from 'typeorm';
 import { Event } from './event';
 
-@Entity()
+@Entity({name: 'booking'})
 @Index(['event_id', 'user_id'], { unique: true })
 export class Booking {
   @PrimaryGeneratedColumn()
@@ -18,5 +18,6 @@ export class Booking {
   created_at!: Date;
 
   @ManyToOne(() => Event, event => event.bookings)
+	@JoinColumn({ name: 'event_id' })
   event!: Event;
 }

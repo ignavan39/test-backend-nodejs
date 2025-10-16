@@ -24,3 +24,19 @@ ON booking(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_booking_event_id 
 ON booking(event_id);
+
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM event WHERE name = 'Концерт рок-группы') THEN
+        INSERT INTO event (name, total_seats) VALUES ('Концерт рок-группы', 100);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM event WHERE name = 'Театральная премьера') THEN
+        INSERT INTO event (name, total_seats) VALUES ('Театральная премьера', 50);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM event WHERE name = 'Спортивное мероприятие') THEN
+        INSERT INTO event (name, total_seats) VALUES ('Спортивное мероприятие', 200);
+    END IF;
+END $$;

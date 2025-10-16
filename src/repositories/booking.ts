@@ -1,7 +1,6 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Booking } from '../entities/booking';
 
-@EntityRepository(Booking)
 export class BookingRepository extends Repository<Booking> {
   
   async checkExistingBooking(eventId: number, userId: string): Promise<boolean> {

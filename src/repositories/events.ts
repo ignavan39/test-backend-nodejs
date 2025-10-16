@@ -1,8 +1,7 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Event } from '../entities/event';
 import { EventNotFoundError } from '../errors/errors';
 
-@EntityRepository(Event)
 export class EventRepository extends Repository<Event> {
   
   async getEventWithBookings(eventId: number): Promise<Event> {
